@@ -44,6 +44,8 @@ const SpotLightWithHelper = ({
 // Box component
 const Box = () => {
   const boxRef = useRef();
+  const isDragging = useRef(false);
+  const previousMousePosition = useRef({ x: 0, y: 0 });
   const { scene } = useThree();
   const { color, speed, showHelpers } = useControls({
     color: "#ff6b35",
@@ -75,9 +77,34 @@ const Box = () => {
   });
 
   return (
-    <mesh ref={boxRef} position={[0, 1, 0]} castShadow>
+    <mesh
+      ref={boxRef}
+      position={[0, 1, 0]}
+      castShadow
+      onPointerDown={(e) => {
+        isDragging.current = true;
+        previousMousePosition.current = { x: e.clientX, y: e.clientY };
+      }}
+      onPointerUp={() => {
+        isDragging.current = false;
+      }}
+      onPointerMove={(e) => {
+        if (!isDragging.current) return;
+
+        const deltaX = e.clientX - previousMousePosition.current.x;
+        const deltaY = e.clientY - previousMousePosition.current.y;
+
+        // Apply rotation
+        if (boxRef.current) {
+          boxRef.current.rotation.y += deltaX * 0.01; // دوران أفقي
+          boxRef.current.rotation.x += deltaY * 0.01; // دوران رأسي
+        }
+
+        previousMousePosition.current = { x: e.clientX, y: e.clientY };
+      }}
+    >
       <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial color={color} metalness={0.3} roughness={0.4} />
+      <meshStandardMaterial color={color} />
     </mesh>
   );
 };
@@ -182,7 +209,7 @@ const App = () => {
           <OrbitControls
             enablePan={true}
             enableZoom={true}
-            enableRotate={true}
+            enableRotate={false}
             minDistance={3}
             maxDistance={20}
           />
